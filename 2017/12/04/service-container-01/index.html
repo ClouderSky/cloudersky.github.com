@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Python," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="前段时间因为工作而接触了Laravel，不由地惊叹其优雅、先进，与过往使用的PHP框架大不相同。 Laravel中有一个服务容器的概念，是作为框架的核心设计而存在的。初见时稍觉得费解，毕竟本人对PHP的了解也十分浅薄。实际完成了一个项目后，对服务容器的设计有了一些体会，便觉得这是个十分强大的设计，不仅仅是因为它实现了依赖注入与解耦，更是因为服务容器的存在使得可替换组件的设计更容易实现与使用。 可替">
+<meta name="keywords" content="Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python服务容器之一">
+<meta property="og:url" content="http://yoursite.com/2017/12/04/service-container-01/index.html">
+<meta property="og:site_name" content="多云天">
+<meta property="og:description" content="前段时间因为工作而接触了Laravel，不由地惊叹其优雅、先进，与过往使用的PHP框架大不相同。 Laravel中有一个服务容器的概念，是作为框架的核心设计而存在的。初见时稍觉得费解，毕竟本人对PHP的了解也十分浅薄。实际完成了一个项目后，对服务容器的设计有了一些体会，便觉得这是个十分强大的设计，不仅仅是因为它实现了依赖注入与解耦，更是因为服务容器的存在使得可替换组件的设计更容易实现与使用。 可替">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-12-04T09:16:00.278Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Python服务容器之一">
+<meta name="twitter:description" content="前段时间因为工作而接触了Laravel，不由地惊叹其优雅、先进，与过往使用的PHP框架大不相同。 Laravel中有一个服务容器的概念，是作为框架的核心设计而存在的。初见时稍觉得费解，毕竟本人对PHP的了解也十分浅薄。实际完成了一个项目后，对服务容器的设计有了一些体会，便觉得这是个十分强大的设计，不仅仅是因为它实现了依赖注入与解耦，更是因为服务容器的存在使得可替换组件的设计更容易实现与使用。 可替">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/12/04/service-container-01/"/>
+
+
+
+
+
+  <title>Python服务容器之一 | 多云天</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">多云天</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/04/service-container-01/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Clouder Sky">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="多云天">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Python服务容器之一</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-04T12:06:58+08:00">
+                2017-12-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python/" itemprop="url" rel="index">
+                    <span itemprop="name">Python</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>前段时间因为工作而接触了Laravel，不由地惊叹其优雅、先进，与过往使用的PHP框架大不相同。</p>
+<p>Laravel中有一个服务容器的概念，是作为框架的核心设计而存在的。初见时稍觉得费解，毕竟本人对PHP的了解也十分浅薄。实际完成了一个项目后，对服务容器的设计有了一些体会，便觉得这是个十分强大的设计，不仅仅是因为它实现了依赖注入与解耦，更是因为服务容器的存在使得可替换组件的设计更容易实现与使用。</p>
+<p>可替换组件，这是本人最近一直十分关注的概念。不同于简单的组件化，它更强调对于相同的一套接口规范，存在多套不同的实现方案。在工作中有一个典型的例子就是第三方支付。无论支付宝、微信还是其他聚合支付的银行通道、支付服务提供商，它们的实现细节虽然略有差别，但本身的接口设置都是高度相似的。此时，针对某一具体的支付类型、通道开发的SDK就可以视为一套组件，而如果使用相同的接口规范来封装不同类型、通道的支付接口，就可以构成一套用于支付的可替换组件。</p>
+<p>看着Laravel的好，心里不免也想在Python里使用类似的功能。可惜受限于英语水平和搜索能力，短时间内没有找到提供类似服务容器的Python开源项目。或许类似的项目正以某个炫酷而我并不知的名称活跃在某一角落或某一社区，但在发现它之前，我恐怕得自己造造轮子，一面解馋，一面加深对服务容器的理解。</p>
+<h4 id="容器本体"><a href="#容器本体" class="headerlink" title="容器本体"></a>容器本体</h4><p>一个服务容器至少要提供两个接口，一个用于定义服务类，另一个用于创建服务类。并且默认的，服务容器应该缓存其构造的服务类。</p>
+<p>目前一个简单的实现如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">container_inject_name = &apos;__container&apos;</div><div class="line"></div><div class="line"></div><div class="line">class Component :</div><div class="line"></div><div class="line">    def __init__ (self, _class) :</div><div class="line">        self._class = _class</div><div class="line"></div><div class="line"></div><div class="line">class Container :</div><div class="line"></div><div class="line">    def __init__ (self) :</div><div class="line">        self.definition = &#123;&#125;</div><div class="line">        self.component  = &#123;&#125;</div><div class="line"></div><div class="line">    def define (self, name, _class) :</div><div class="line">        self.definition[name] = Component(_class)</div><div class="line"></div><div class="line">    def make (self, name) :</div><div class="line">        assert name in self.definition, \</div><div class="line">            &apos;make undefined component with name &lt;%d&gt;&apos;%self.name</div><div class="line"></div><div class="line">        if name in self.component :</div><div class="line">            return self.component[name]</div><div class="line"></div><div class="line">        component = self.definition[name]</div><div class="line">        _class    = self.load(component._class)</div><div class="line"></div><div class="line">        self.component[name] = _class</div><div class="line">        return _class</div><div class="line"></div><div class="line">    def load (self, _class) :</div><div class="line">        return type(_class.__name__, (_class,), &#123;</div><div class="line">            container_inject_name : self,</div><div class="line">        &#125;)</div></pre></td></tr></table></figure>
+<p>这段代码中，定义了一个<code>Component</code>类用来保存定义服务类的信息，目前仅包含了服务类的实现类。</p>
+<p>而对于服务类的创建，上例采取的办法是临时创建一个定义中实现类的字类，并注入一个名为<code>__container</code>的成员属性。<code>__container</code>属性也就是创建实现类的服务容器实例，为了避免与实现类中的属性命名冲突，特意使用了双下划线开头。透过这一属性，由服务容易创建的实现类就可以执行与服务容易有关的各种操作，比如通过服务容器创建有依赖关系的其他实现类。</p>
+<h4 id="依赖注入"><a href="#依赖注入" class="headerlink" title="依赖注入"></a>依赖注入</h4><p>服务容器在使用中最常用到的就是依赖注入了。形象地说，服务容器中定义的每一个服务类，都相当于是一个零件种类，而每一个对应的实现类，都是该零件种类下的某一型号。服务容器的作用，就是通过定义服务类来形成一套组装说明书，然后全自动地维护零件组装，使得生产流水线可以仅通过修改组装说明书，而不对零件做任何修改就实现不同产品的组装。对应到代码里，就是服务容器通过维护各组件的依赖关系，在运行时组装不同功能的类。</p>
+<p>为了声明依赖关系，特别定义了一个描述依赖的类：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">class Dependency :</div><div class="line"></div><div class="line">    def __init__ (self, name) :</div><div class="line">        self.name = name</div><div class="line"></div><div class="line">    def __get__ (self, instance, cls) :</div><div class="line">        if hasattr(cls, container_inject_name) :</div><div class="line">            container = getattr(cls, container_inject_name)</div><div class="line">            return container.make(self.name)</div><div class="line">        return self</div></pre></td></tr></table></figure>
+<p>这个类使用了<code>__get__</code>魔法属性，主要是为了实现依赖类的懒加载。在获取依赖时，上例定义的类就会查找调用类中包含的容器实例，然后发起实现类的创建。</p>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><p>至此，一个极精简的服务容器就完成了，使用示例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">class Storage :</div><div class="line"></div><div class="line">    pass</div><div class="line"></div><div class="line">class Model :</div><div class="line"></div><div class="line">    storage = Dependency(&apos;store&apos;)</div><div class="line"></div><div class="line">container = Container()</div><div class="line">container.define(&apos;store&apos;, Storage)</div><div class="line"></div><div class="line">cls_model = container.load(Model)</div><div class="line">print(cls_model, cls_model.__dict__.keys(), cls_model.__mro__)</div><div class="line"># &lt;class &apos;__main__.Model&apos;&gt; dict_keys([&apos;__container&apos;, &apos;__doc__&apos;, &apos;__module__&apos;]) (&lt;class &apos;__main__.Model&apos;&gt;, &lt;class &apos;__main__.Model&apos;&gt;, &lt;class &apos;object&apos;&gt;)</div><div class="line"></div><div class="line">cls_store = cls_model.storage</div><div class="line">print(cls_store, cls_store.__dict__.keys(), cls_store.__mro__)</div><div class="line"># &lt;class &apos;__main__.Storage&apos;&gt; dict_keys([&apos;__container&apos;, &apos;__doc__&apos;, &apos;__module__&apos;]) (&lt;class &apos;__main__.Storage&apos;&gt;, &lt;class &apos;__main__.Storage&apos;&gt;, &lt;class &apos;object&apos;&gt;)</div></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/27/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Clouder Sky" />
+          <p class="site-author-name" itemprop="name">Clouder Sky</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="mail://work_p@163.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#容器本体"><span class="nav-number">1.</span> <span class="nav-text">容器本体</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖注入"><span class="nav-number">2.</span> <span class="nav-text">依赖注入</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#示例"><span class="nav-number">3.</span> <span class="nav-text">示例</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Clouder Sky</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
